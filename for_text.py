@@ -16,6 +16,11 @@ nlp = spacy.load("ru_core_news_sm")
 nlp.max_length = 2_000_000
 
 
+def split_text(text, max_length=100_000):
+    """Разделяет текст на части заданной длины."""
+    return [text[i:i + max_length] for i in range(0, len(text), max_length)]
+
+
 def read_text(file_path):
     """Чтение текста из файла."""
     with open(file_path, "r", encoding="utf-8") as file:
@@ -66,5 +71,14 @@ def extract_entities_spacy(text):
 def extract_entities_nltk(text):
     """Извлечение сущностей с помощью Natasha."""
     extractor = NamesExtractor(morph_vocab)
-    matches = extractor(text)
-    return [{"first": match.fact.first, "last": match.fact.last} for match in matches]
+    entities = []
+
+    # Разделяем текст на части
+    text_parts = split_text(text, max_length=100_000)
+
+    # Обрабатываем каждую часть
+    for part in text_parts:
+        matches = extractor(part)
+        entities.extend([{"first": match.fact.first, "last": match.fact.last} for match in matches])
+
+    return entities
